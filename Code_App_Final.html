@@ -278,6 +278,9 @@
       #cat5 {
         background: rgb(185, 28, 28);
       }
+      #cat6 {
+        background: rgb(255, 193, 7);
+      }
 
       .category-panel button:hover:not(.disabled),
       .category-panel button:focus-visible:not(.disabled) {
@@ -753,14 +756,23 @@
       </div>
       <div class="category-panel">
         <button class="btn active" id="cat1" data-category="1">
-          Artère Cystique
+          <i class="fas fa-project-diagram"></i> Artère Cystique
         </button>
-        <button class="btn" id="cat2" data-category="2">Canal Cystique</button>
+        <button class="btn" id="cat2" data-category="2">
+          <i class="fas fa-water"></i> Canal Cystique
+        </button>
         <button class="btn" id="cat3" data-category="3">
-          Vésicule Biliaire
+          <i class="fas fa-leaf"></i> Vésicule Biliaire
         </button>
-        <button class="btn" id="cat4" data-category="4">Foie</button>
-        <button class="btn" id="cat5" data-category="5">Outil</button>
+        <button class="btn" id="cat4" data-category="4">
+          <i class="fas fa-liver"></i> Foie
+        </button>
+        <button class="btn" id="cat5" data-category="5">
+          <i class="fas fa-tools"></i> Outil
+        </button>
+        <button class="btn" id="cat6" data-category="6">
+          <i class="fas fa-stream"></i> Voie Biliaire Principale
+        </button>
       </div>
     </div>
 
@@ -1062,6 +1074,14 @@
           supercategory: "anatomy",
           displayName: "Outil",
           icon: "fa-tools",
+        },
+        6: {
+          id: 6,
+          name: "main_biliary_duct",
+          color: "rgb(255, 193, 7)",
+          supercategory: "anatomy",
+          displayName: "Voie Biliaire Principale",
+          icon: "fa-stream",
         },
       };
 
@@ -1739,7 +1759,7 @@
                 id: imageId++,
                 height: img.height,
                 width: img.width,
-                video_id: 1, // ou générer dynamiquement
+                video_id: 1,
                 frame_id: null,
                 is_det_keyframe: true,
                 is_ds_keyframe: true,
@@ -1786,7 +1806,6 @@
 
               const scaleX = canvas.width / image.width;
               const scaleY = canvas.height / image.height;
-              // Convertir la segmentation polygon back en points pour l'affichage
               const maskPoints = convertSegmentationToPoints(
                 anno.segmentation[0]
               );
@@ -2056,13 +2075,12 @@
 
       function polygonToCocoFormat(maskPoints) {
         try {
-          // Convertir les points en format COCO: [x1, y1, x2, y2, ..., xn, yn]
           const segmentation = [];
           maskPoints.forEach((point) => {
             segmentation.push(point.x);
             segmentation.push(point.y);
           });
-          return [segmentation]; // Array de arrays pour compatibilité COCO
+          return [segmentation];
         } catch (e) {
           console.error("Error in polygonToCocoFormat:", e);
           return [[]];
@@ -2176,7 +2194,6 @@
           const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
           const baseFileName = image.file_name.split(".")[0];
           const outputFileName = `${baseFileName}_annotated_${timestamp}`;
-          // Créer une copie de l'image sans la propriété 'image' (objet Image)
           const imageForJson = {
             file_name: image.file_name,
             height: image.height,
