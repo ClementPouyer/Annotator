@@ -47,15 +47,41 @@
     <style>
       /* --- Variables CSS Globales --- */
       :root {
+        /* Thème Sombre (Défaut) */
         --color-background: #000000;
         --color-text: #eaeaea;
         --color-text-muted: #a0a0a0;
+        --glass-bg: rgba(15, 15, 20, 0.5);
+        --border-color: rgba(255, 255, 255, 0.1);
+        --toolbar-btn-bg: rgba(255, 255, 255, 0.05);
+        --toolbar-btn-hover-bg: rgba(255, 255, 255, 0.1);
+        --toolbar-btn-color: #ffffff;
+        --background-image-url: url("dark_mode_gradient.png");
+        --modal-bg: rgba(0, 0, 0, 0.8);
+        --history-item-hover: rgba(255, 255, 255, 0.05);
+        --label-bg: rgba(15, 15, 20, 0.7);
+
+        /* Couleurs partagées */
         --gradient-primary: linear-gradient(135deg, #ff7d12, #fb3aa2, #2997ff);
         --glow-color: rgba(251, 58, 162, 0.3);
         --border-color-hover: #fb3aa2;
-        --glass-bg: rgba(15, 15, 20, 0.5);
         --glass-blur: blur(12px);
-        --border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      body.light-mode {
+        /* Thème Clair */
+        --color-background: #f0f2f5;
+        --color-text: #1c1e21;
+        --color-text-muted: #65676b;
+        --glass-bg: rgba(255, 255, 255, 0.6);
+        --border-color: rgba(0, 0, 0, 0.1);
+        --toolbar-btn-bg: rgba(0, 0, 0, 0.05);
+        --toolbar-btn-hover-bg: rgba(0, 0, 0, 0.1);
+        --toolbar-btn-color: #1c1e21;
+        --background-image-url: url("light_mode_gradient.png");
+        --modal-bg: rgba(255, 255, 255, 0.8);
+        --history-item-hover: rgba(0, 0, 0, 0.05);
+        --label-bg: rgba(255, 255, 255, 0.8);
       }
 
       /* --- Réinitialisation et Styles de Base --- */
@@ -64,23 +90,22 @@
         padding: 0;
         box-sizing: border-box;
       }
-      html,
+      html {
+        height: 100%;
+      }
       body {
         height: 100vh;
         width: 100vw;
         overflow: hidden;
         font-family: "Inter", sans-serif;
-        background-color: var(--color-background);
         color: var(--color-text);
         -webkit-tap-highlight-color: transparent;
-      }
-
-      /* --- Arrière-plan Animé --- */
-      #constellation-canvas {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        opacity: 0.6;
+        background-color: var(--color-background);
+        background-image: var(--background-image-url);
+        background-repeat: no-repeat;
+        background-position: bottom center;
+        background-size: 100% auto;
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
 
       /* --- En-tête --- */
@@ -130,11 +155,13 @@
         position: relative;
         background: var(--glass-bg);
         backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
         border: 1px solid var(--border-color);
         border-radius: 16px;
         padding: 0.75rem;
         display: flex;
         min-height: 0;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
       }
       .canvas-area {
         position: relative;
@@ -176,21 +203,23 @@
         padding: 0.6rem;
         background: var(--glass-bg);
         backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
         border: 1px solid var(--border-color);
         border-radius: 16px;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
       }
       .toolbar-group {
         display: flex;
         gap: 0.6rem;
-        align-items: center; /* Alignement vertical pour le badge */
+        align-items: center;
       }
       .toolbar-btn {
         width: 42px;
         height: 42px;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--toolbar-btn-bg);
         border: 1px solid var(--border-color);
-        color: #ffffff;
+        color: var(--toolbar-btn-color);
         font-size: 1.1rem;
         cursor: pointer;
         transition: all 0.2s ease;
@@ -198,9 +227,9 @@
         align-items: center;
         justify-content: center;
       }
-      .toolbar-btn:hover {
+      .toolbar-btn:hover:not(:disabled) {
         border-color: var(--border-color-hover);
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--toolbar-btn-hover-bg);
         transform: translateY(-2px);
         box-shadow: 0 5px 15px var(--glow-color);
       }
@@ -210,20 +239,11 @@
         border-color: transparent;
         box-shadow: 0 0 15px var(--glow-color);
       }
-      .toolbar-btn.disabled {
-        opacity: 0.5;
+      .toolbar-btn:disabled {
+        opacity: 0.4;
         cursor: not-allowed;
-        pointer-events: none;
       }
-      .bottom-toolbar {
-        position: absolute;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        z-index: 5;
-      }
+
       .read-only-badge {
         background-color: #ffcc00;
         color: #333;
@@ -247,10 +267,12 @@
         padding: 1rem;
         background: var(--glass-bg);
         backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
         border: 1px solid var(--border-color);
         border-radius: 16px;
         width: 260px;
         flex-shrink: 0;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
       }
       .category-btn {
         font-family: "Inter", sans-serif;
@@ -260,22 +282,33 @@
         color: var(--color-text);
         padding: 0.8rem 1.2rem;
         border-radius: 10px;
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--toolbar-btn-bg);
         border: 1px solid var(--border-color);
         cursor: pointer;
         transition: all 0.2s ease;
       }
-      .category-btn:hover {
+      .category-btn:hover:not(:disabled) {
         transform: translateY(-2px);
         filter: brightness(1.2);
         border-color: rgba(255, 255, 255, 0.2);
       }
+
+      body.light-mode .category-btn:hover:not(:disabled) {
+        border-color: rgba(0, 0, 0, 0.2);
+      }
+
       .category-btn.active {
         color: white;
         border-color: transparent;
         box-shadow: 0 0 15px var(--glow-color);
       }
-      /* Couleurs spécifiques par catégorie */
+      .category-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        filter: none;
+        border-color: var(--border-color);
+      }
       #cat3.active {
         background-image: linear-gradient(135deg, #ff3333, #cc0000);
       }
@@ -299,8 +332,9 @@
       .modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(8px); /* Blur réduit */
+        background: var(--modal-bg);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         z-index: 1000;
         display: flex;
         align-items: center;
@@ -313,7 +347,6 @@
         opacity: 1;
         pointer-events: all;
       }
-      /* Assurez-vous que confirmModal est au-dessus de tout le reste */
       #confirmModal.modal-overlay,
       #imageChangeModal.modal-overlay {
         z-index: 1002;
@@ -326,7 +359,8 @@
         width: 90%;
         max-width: 500px;
         transform: scale(0.95);
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, background-color 0.3s ease,
+          border-color 0.3s ease;
         color: var(--color-text);
         display: flex;
         flex-direction: column;
@@ -391,15 +425,15 @@
         box-shadow: 0 0 15px var(--glow-color);
       }
       .btn-secondary {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
+        background: var(--toolbar-btn-bg);
+        border-color: var(--border-color);
         color: var(--color-text);
       }
       .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: var(--toolbar-btn-hover-bg);
       }
 
-      /* Styles de l'historique amélioré */
+      /* --- Historique --- */
       #historyList {
         list-style: none;
         padding: 0;
@@ -415,7 +449,7 @@
         border-radius: 8px;
       }
       .history-item:hover {
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--history-item-hover);
       }
       .history-item-thumbnail {
         width: 80px;
@@ -449,7 +483,7 @@
         color: #ff5555;
       }
 
-      /* Message d'info/erreur général */
+      /* --- Messages et Indicateurs --- */
       .message-box {
         position: fixed;
         top: 80px;
@@ -459,7 +493,7 @@
         color: white;
         padding: 10px 20px;
         border-radius: 8px;
-        z-index: 1003; /* Au-dessus des modales */
+        z-index: 1003;
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.3s, visibility 0.3s;
@@ -471,37 +505,37 @@
         visibility: visible;
       }
 
-      /* Message d'absence d'annotations (nouveau style) */
       .no-annotation-message {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.7); /* Fond semi-transparent foncé */
-        backdrop-filter: blur(5px); /* Fond flou */
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
         color: white;
         padding: 20px 30px;
         border-radius: 12px;
-        font-size: 1.5rem; /* Police plus grande */
+        font-size: 1.5rem;
         font-weight: bold;
         text-align: center;
-        pointer-events: none; /* Permet aux clics de passer à travers si besoin */
+        pointer-events: none;
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.3s, visibility 0.3s;
-        z-index: 50; /* Au-dessus du canvas mais en dessous des modales principales */
+        z-index: 50;
       }
       .no-annotation-message.active {
         opacity: 1;
         visibility: visible;
       }
 
-      /* --- Indicateur de Progression --- */
       .progress-overlay {
         position: fixed;
         inset: 0;
         background: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
         z-index: 1001;
         display: none;
         align-items: center;
@@ -518,10 +552,20 @@
         height: 50px;
         animation: spin 1s linear infinite;
       }
+
+      body.light-mode .progress-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-top-color: var(--border-color-hover);
+      }
+
       @keyframes spin {
         100% {
           transform: rotate(360deg);
         }
+      }
+
+      .light-mode .draw-label {
+        background-color: var(--label-bg);
       }
 
       /* --- Responsive --- */
@@ -541,11 +585,6 @@
           flex-grow: 1;
           text-align: center;
         }
-        .bottom-toolbar {
-          flex-direction: row;
-          bottom: 1rem;
-          right: 1rem;
-        }
       }
       @media (max-width: 768px) {
         .top-header {
@@ -557,7 +596,8 @@
           padding: 50px 0.5rem 0.5rem;
           gap: 1rem;
         }
-        .toolbar {
+        .toolbar,
+        .bottom-toolbar {
           padding: 0.4rem;
         }
         .toolbar-btn {
@@ -582,7 +622,6 @@
     </style>
   </head>
   <body>
-    <canvas id="constellation-canvas"></canvas>
     <div class="top-header">
       <span class="app-title">Anatomy Annotator</span>
       <span class="brand">by Vioo AI</span>
@@ -621,16 +660,34 @@
             >
               <i class="fas fa-eye"></i>
             </button>
-            <span class="read-only-badge" id="readOnlyBadge">
-              <i class="fas fa-lock"></i> LECTURE SEULE
-            </span>
+            <span class="read-only-badge" id="readOnlyBadge"
+              ><i class="fas fa-lock"></i> LECTURE SEULE</span
+            >
           </div>
           <div class="toolbar-group">
             <button class="toolbar-btn" id="tutorialBtn" title="Aide">
               <i class="fas fa-question-circle"></i>
             </button>
+            <!-- BOUTON DE THÈME AJOUTÉ ICI -->
+            <button
+              class="toolbar-btn"
+              id="themeToggleBtn"
+              title="Passer en mode clair"
+            >
+              <i class="fas fa-sun"></i>
+            </button>
             <button class="toolbar-btn" id="backBtn" title="Retour">
               <i class="fas fa-arrow-left"></i>
+            </button>
+            <!-- NOUVEL EMPLACEMENT DES BOUTONS UNDO/REDO/CLEAR -->
+            <button class="toolbar-btn" id="undoBtn" title="Annuler (Ctrl+Z)">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button class="toolbar-btn" id="redoBtn" title="Refaire (Ctrl+Y)">
+              <i class="fas fa-redo"></i>
+            </button>
+            <button class="toolbar-btn" id="clearAllBtn" title="Tout effacer">
+              <i class="fas fa-trash"></i>
             </button>
           </div>
         </div>
@@ -645,17 +702,6 @@
               <p>Chargez une image pour commencer.</p>
             </div>
             <canvas id="canvas"></canvas>
-          </div>
-          <div class="bottom-toolbar">
-            <button class="toolbar-btn" id="undoBtn" title="Annuler (Ctrl+Z)">
-              <i class="fas fa-undo"></i>
-            </button>
-            <button class="toolbar-btn" id="redoBtn" title="Refaire (Ctrl+Y)">
-              <i class="fas fa-redo"></i>
-            </button>
-            <button class="toolbar-btn" id="clearAllBtn" title="Tout effacer">
-              <i class="fas fa-trash"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -781,371 +827,331 @@
     </div>
 
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // --- SÉLECTEURS DU DOM ---
-        // Centralisation de tous les éléments DOM pour un accès plus rapide et un code plus court.
-        const els = {
-          canvas: document.getElementById("canvas"),
-          placeholder: document.getElementById("noImagePlaceholder"),
-          constellationCanvas: document.getElementById("constellation-canvas"),
-          progressOverlay: document.getElementById("progressOverlay"),
-          imageInput: document.getElementById("imageInput"),
-          readOnlyBadge: document.getElementById("readOnlyBadge"),
-          noAnnotationMessage: document.getElementById("noAnnotationMessage"),
-          tutorialModal: document.getElementById("tutorialModal"),
-          confirmModal: document.getElementById("confirmModal"),
-          imageChangeModal: document.getElementById("imageChangeModal"),
-          historyModal: document.getElementById("historyModal"),
-          confirmModalLabel: document.getElementById("confirmModalLabel"),
-          confirmMessage: document.getElementById("confirmMessage"),
-          confirmActionBtn: document.getElementById("confirmActionBtn"),
-          saveAndChangeBtn: document.getElementById("saveAndChangeBtn"),
-          changeWithoutSavingBtn: document.getElementById(
-            "changeWithoutSavingBtn"
-          ),
-          historyList: document.getElementById("historyList"),
-          clearHistoryBtn: document.getElementById("clearHistoryBtn"),
-          newImageBtn: document.getElementById("newImageBtn"),
-          saveBtn: document.getElementById("saveBtn"),
-          historyBtn: document.getElementById("historyBtn"),
-          toggleAnnotationsBtn: document.getElementById("toggleAnnotationsBtn"),
-          tutorialBtn: document.getElementById("tutorialBtn"),
-          undoBtn: document.getElementById("undoBtn"),
-          redoBtn: document.getElementById("redoBtn"),
-          clearAllBtn: document.getElementById("clearAllBtn"),
-        };
-
-        const ctx = els.canvas.getContext("2d", { willReadFrequently: true });
-        const canvasArea = document.querySelector(".canvas-area");
-
-        // --- ÉTAT GLOBAL DE L'APPLICATION ---
-        let image = null;
-        const annotations = [];
-        let undoneAnnotations = [];
-        let currentCategory = 3;
-        let maskPoints = [];
-        let isDrawing = false;
-        let showAnnotations = true;
-        let isSaved = true;
-        let isViewOnly = false;
-        let currentImageRenderInfo = { x: 0, y: 0, width: 0, height: 0 };
-
-        const CATEGORIES = {
-          3: {
-            id: 3,
-            name: "cystic_artery",
-            color: "rgb(255, 51, 51)",
-            supercategory: "anatomy",
-            displayName: "Artère Cystique",
-          },
-          4: {
-            id: 4,
-            name: "cystic_duct",
-            color: "rgb(51, 204, 51)",
-            supercategory: "anatomy",
-            displayName: "Canal Cystique",
-          },
-          5: {
-            id: 5,
-            name: "gallbladder",
-            color: "rgb(0, 90, 50)",
-            supercategory: "anatomy",
-            displayName: "Vésicule Biliaire",
-          },
-          6: {
-            id: 6,
-            name: "tool",
-            color: "rgb(179, 179, 179)",
-            supercategory: "tool",
-            displayName: "Outil",
-          },
-          7: {
-            id: 7,
-            name: "liver",
-            color: "rgb(159, 51, 255)",
-            supercategory: "anatomy",
-            displayName: "Foie",
-          },
-          8: {
-            id: 8,
-            name: "common_bile_duct",
-            color: "rgb(255, 153, 51)",
-            supercategory: "anatomy",
-            displayName: "Voie Biliaire Principale",
-          },
-        };
-
-        // --- FONCTIONS UTILITAIRES ---
-        const debounce = (func, wait) => {
-          let timeout;
-          return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
+      class AnatomyAnnotator {
+        /**
+         * Constructeur de la classe AnatomyAnnotator.
+         * Initialise la configuration, l'état, les éléments du DOM et le contexte du canvas.
+         */
+        constructor() {
+          this.config = {
+            // Définition statique des catégories d'annotation
+            CATEGORIES: {
+              3: {
+                id: 3,
+                name: "cystic_artery",
+                color: "rgb(255, 51, 51)",
+                supercategory: "anatomy",
+                displayName: "Artère Cystique",
+              },
+              4: {
+                id: 4,
+                name: "cystic_duct",
+                color: "rgb(51, 204, 51)",
+                supercategory: "anatomy",
+                displayName: "Canal Cystique",
+              },
+              5: {
+                id: 5,
+                name: "gallbladder",
+                color: "rgb(0, 90, 50)",
+                supercategory: "anatomy",
+                displayName: "Vésicule Biliaire",
+              },
+              6: {
+                id: 6,
+                name: "tool",
+                color: "rgb(179, 179, 179)",
+                supercategory: "tool",
+                displayName: "Outil",
+              },
+              7: {
+                id: 7,
+                name: "liver",
+                color: "rgb(159, 51, 255)",
+                supercategory: "anatomy",
+                displayName: "Foie",
+              },
+              8: {
+                id: 8,
+                name: "common_bile_duct",
+                color: "rgb(255, 153, 51)",
+                supercategory: "anatomy",
+                displayName: "Voie Biliaire Principale",
+              },
+            },
+            IMAGE_WIDTH: 854, // Largeur cible pour les images importées
+            IMAGE_HEIGHT: 480, // Hauteur cible pour les images importées
           };
-        };
 
-        const setProgress = (active) =>
-          els.progressOverlay.classList.toggle("active", active);
-
-        const showNoAnnotationMessage = (duration = 3000) => {
-          els.noAnnotationMessage.classList.add("active");
-          setTimeout(() => {
-            els.noAnnotationMessage.classList.remove("active");
-          }, duration);
-        };
-
-        // --- ARRIÈRE-PLAN ANIMÉ ---
-        // La logique d'arrière-plan animée est déjà encapsulée et ne nécessite pas de modifications d'optimisation supplémentaires.
-        (() => {
-          const bgCtx = els.constellationCanvas.getContext("2d");
-          let stars = [],
-            animationFrameId;
-
-          const setup = () => {
-            els.constellationCanvas.width = window.innerWidth;
-            els.constellationCanvas.height = window.innerHeight;
-            stars = [];
-            const starCount = Math.min(
-              150,
-              (window.innerWidth * window.innerHeight) / 10000
-            );
-            for (let i = 0; i < starCount; i++) {
-              stars.push({
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-                radius: Math.random() * 1.6 + 0.8,
-                vx: (Math.random() - 0.5) * 0.1,
-                vy: (Math.random() - 0.5) * 0.1,
-                opacity: Math.random() * 0.6 + 0.3,
-              });
-            }
+          // Centralisation de tous les éléments du DOM
+          this.dom = {
+            body: document.body,
+            canvas: document.getElementById("canvas"),
+            canvasArea: document.querySelector(".canvas-area"),
+            placeholder: document.getElementById("noImagePlaceholder"),
+            progressOverlay: document.getElementById("progressOverlay"),
+            imageInput: document.getElementById("imageInput"),
+            readOnlyBadge: document.getElementById("readOnlyBadge"),
+            noAnnotationMessage: document.getElementById("noAnnotationMessage"),
+            // Modales
+            tutorialModal: document.getElementById("tutorialModal"),
+            confirmModal: document.getElementById("confirmModal"),
+            imageChangeModal: document.getElementById("imageChangeModal"),
+            historyModal: document.getElementById("historyModal"),
+            // Éléments des modales
+            confirmModalLabel: document.getElementById("confirmModalLabel"),
+            confirmMessage: document.getElementById("confirmMessage"),
+            confirmActionBtn: document.getElementById("confirmActionBtn"),
+            saveAndChangeBtn: document.getElementById("saveAndChangeBtn"),
+            changeWithoutSavingBtn: document.getElementById(
+              "changeWithoutSavingBtn"
+            ),
+            historyList: document.getElementById("historyList"),
+            clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+            // Boutons de la barre d'outils
+            newImageBtn: document.getElementById("newImageBtn"),
+            saveBtn: document.getElementById("saveBtn"),
+            historyBtn: document.getElementById("historyBtn"),
+            toggleAnnotationsBtn: document.getElementById(
+              "toggleAnnotationsBtn"
+            ),
+            tutorialBtn: document.getElementById("tutorialBtn"),
+            themeToggleBtn: document.getElementById("themeToggleBtn"), // Bouton de thème
+            backBtn: document.getElementById("backBtn"),
+            undoBtn: document.getElementById("undoBtn"),
+            redoBtn: document.getElementById("redoBtn"),
+            clearAllBtn: document.getElementById("clearAllBtn"),
+            categoryPanel: document.querySelector(".category-panel"),
           };
-          const draw = () => {
-            bgCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            stars.forEach((star) => {
-              bgCtx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-              bgCtx.beginPath();
-              bgCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-              bgCtx.fill();
-              star.x += star.vx;
-              star.y += star.vy;
-              if (star.x < 0 || star.x > window.innerWidth) star.vx *= -1;
-              if (star.y < 0 || star.y > window.innerHeight) star.vy *= -1;
-            });
-            animationFrameId = requestAnimationFrame(draw);
-          };
-          window.addEventListener("resize", debounce(setup, 200));
-          setup();
-          draw();
-        })();
 
-        // --- GESTION DES MODALES ---
-        const setupModals = () => {
+          this.ctx = this.dom.canvas.getContext("2d", {
+            willReadFrequently: true,
+          });
+
+          // Initialisation de l'état de l'application
+          this.resetState();
+        }
+
+        /**
+         * Réinitialise l'état de l'application à ses valeurs par défaut.
+         * Appelé lors du chargement d'une nouvelle image ou à l'initialisation.
+         */
+        resetState() {
+          this.state = {
+            image: null,
+            annotations: [],
+            history: [[]], // L'historique commence avec un état vide (un tableau d'annotations vide)
+            historyIndex: 0, // Pointe vers l'état actuel dans l'historique
+            currentCategory: 3,
+            maskPoints: [],
+            isDrawing: false,
+            showAnnotations: true,
+            isSaved: true,
+            isViewOnly: false,
+            currentImageRenderInfo: { x: 0, y: 0, width: 0, height: 0 },
+          };
+        }
+
+        /**
+         * Point d'entrée principal. Configure les écouteurs d'événements et initialise l'UI.
+         */
+        init() {
+          this.loadTheme();
+          this.setupEventListeners();
+          this.updateUIState();
+        }
+
+        // --- GESTION DES ÉVÉNEMENTS ---
+
+        /**
+         * Configure tous les écouteurs d'événements de l'application.
+         */
+        setupEventListeners() {
+          // Modales
           document.querySelectorAll('[data-dismiss="modal"]').forEach((btn) => {
             btn.addEventListener("click", () =>
               btn.closest(".modal-overlay").classList.remove("active")
             );
           });
-        };
-        const toggleModal = (modalId, show) =>
-          document.getElementById(modalId).classList.toggle("active", show);
 
-        const showConfirmModal = (title, message, confirmCallback) => {
-          els.confirmModalLabel.textContent = title;
-          els.confirmMessage.textContent = message;
-          const confirmBtn = els.confirmActionBtn;
-          // Clonage du bouton pour supprimer les anciens écouteurs d'événements et éviter les déclenchements multiples.
-          const newConfirmBtn = confirmBtn.cloneNode(true);
-          confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+          // Barre d'outils principale
+          this.dom.newImageBtn.onclick = () =>
+            this.checkUnsavedChanges(() => this.dom.imageInput.click());
+          this.dom.imageInput.onchange = (e) =>
+            e.target.files[0] && this.loadImage(e.target.files[0]);
+          this.dom.saveBtn.onclick = () => this.saveAll();
+          this.dom.historyBtn.onclick = () => this.showHistoryModal();
+          this.dom.clearHistoryBtn.onclick = () => this.clearAllHistory();
+          this.dom.backBtn.onclick = () =>
+            this.checkUnsavedChanges(
+              () => (window.location.href = "index.html")
+            );
+          this.dom.toggleAnnotationsBtn.onclick = () =>
+            this.toggleAnnotationsVisibility();
+          this.dom.tutorialBtn.onclick = () =>
+            this.toggleModal("tutorialModal", true);
+          this.dom.themeToggleBtn.onclick = () => this.toggleTheme();
 
-          newConfirmBtn.addEventListener(
-            "click",
-            () => {
-              confirmCallback();
-              toggleModal("confirmModal", false);
-            },
-            { once: true } // L'écouteur est automatiquement supprimé après un seul déclenchement.
-          );
-          toggleModal("confirmModal", true);
-        };
+          // Barre d'outils du canvas (undo, redo, clear)
+          this.dom.undoBtn.onclick = () => this.undo();
+          this.dom.redoBtn.onclick = () => this.redo();
+          this.dom.clearAllBtn.onclick = () => this.clearAll();
 
-        // --- GESTION DE L'HISTORIQUE ---
-        const getHistory = () =>
-          JSON.parse(localStorage.getItem("annotatedImageHistory")) || [];
-        const saveHistory = (history) => {
-          // Limite l'historique aux 10 dernières entrées pour optimiser le stockage.
-          if (history.length > 10) history = history.slice(-10);
-          localStorage.setItem(
-            "annotatedImageHistory",
-            JSON.stringify(history)
-          );
-        };
-        const deleteHistoryEntry = (timestamp) => {
-          showConfirmModal(
-            "Supprimer l'entrée",
-            "Voulez-vous vraiment supprimer cette entrée de l'historique ?",
-            () => {
-              let history = getHistory().filter(
-                (item) => item.timestamp !== timestamp
-              );
-              saveHistory(history);
-              showHistoryModal(); // Rafraîchit l'affichage de la modale après suppression.
+          // Catégories
+          this.dom.categoryPanel.addEventListener("click", (e) => {
+            if (e.target.classList.contains("category-btn")) {
+              this.selectCategory(e.target.dataset.category);
             }
-          );
-        };
-        const clearAllHistory = () => {
-          showConfirmModal(
-            "Vider l'historique",
-            "Voulez-vous vraiment supprimer tout l'historique ? Cette action est irréversible.",
-            () => {
-              localStorage.removeItem("annotatedImageHistory");
-              showHistoryModal(); // Rafraîchit l'affichage de la modale après vidage.
-            }
-          );
-        };
-        const showHistoryModal = () => {
-          els.historyList.innerHTML = "";
-          const history = getHistory();
-          els.clearHistoryBtn.style.display =
-            history.length > 0 ? "block" : "none";
-
-          if (history.length === 0) {
-            els.historyList.innerHTML =
-              "<li>Aucune image dans l'historique.</li>";
-          } else {
-            // Afficher les éléments les plus récents en premier.
-            history.reverse().forEach((entry) => {
-              const li = document.createElement("li");
-              li.className = "history-item";
-              li.innerHTML = `
-                        <img src="${
-                          entry.imageData
-                        }" class="history-item-thumbnail" alt="Aperçu"/>
-                        <div class="history-item-info">
-                            <span class="filename">${entry.fileName}</span>
-                            <span class="details">${
-                              entry.annotations.length
-                            } annotation(s) - ${new Date(
-                entry.timestamp
-              ).toLocaleString()}</span>
-                        </div>
-                        <i class="fas fa-trash history-item-delete" title="Supprimer cette entrée"></i>
-                    `;
-              li.querySelector(".history-item-delete").addEventListener(
-                "click",
-                (e) => {
-                  e.stopPropagation(); // Empêche l'événement de clic du li de se déclencher.
-                  deleteHistoryEntry(entry.timestamp);
-                }
-              );
-              li.addEventListener("click", () =>
-                checkUnsavedChanges(() => {
-                  loadImageFromHistory(entry);
-                  toggleModal("historyModal", false);
-                })
-              );
-              els.historyList.appendChild(li);
-            });
-          }
-          toggleModal("historyModal", true);
-        };
-
-        // --- LOGIQUE DU CANVAS ET DES ANNOTATIONS ---
-        const updateUIState = () => {
-          const hasImage = !!image;
-          // Les outils d'annotation sont désactivés en mode lecture seule.
-          const canAnnotate = hasImage && !isViewOnly;
-
-          els.canvas.style.display = hasImage ? "block" : "none";
-          els.placeholder.style.display = hasImage ? "none" : "flex";
-
-          // Contrôle l'état des boutons liés à l'annotation et à la sauvegarde.
-          ["undoBtn", "redoBtn", "clearAllBtn", "saveBtn"].forEach((id) => {
-            const btn = els[id];
-            btn.disabled = !canAnnotate;
-            btn.classList.toggle("disabled", !canAnnotate);
-          });
-          // Contrôle l'état des boutons de catégorie.
-          document.querySelectorAll(".category-btn").forEach((btn) => {
-            btn.disabled = !canAnnotate;
-            btn.classList.toggle("disabled", !canAnnotate);
           });
 
-          // Affiche ou masque le badge "LECTURE SEULE".
-          els.readOnlyBadge.classList.toggle("active", isViewOnly);
+          // Canvas (dessin)
+          const canvas = this.dom.canvas;
+          canvas.addEventListener("mousedown", this.handleDrawStart.bind(this));
+          canvas.addEventListener("mousemove", this.handleDrawMove.bind(this));
+          canvas.addEventListener("mouseup", this.handleDrawEnd.bind(this));
+          canvas.addEventListener("mouseleave", this.handleDrawEnd.bind(this));
+          canvas.addEventListener(
+            "touchstart",
+            this.handleDrawStart.bind(this),
+            { passive: false }
+          );
+          canvas.addEventListener("touchmove", this.handleDrawMove.bind(this), {
+            passive: false,
+          });
+          canvas.addEventListener("touchend", this.handleDrawEnd.bind(this), {
+            passive: false,
+          });
+          canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
-          // Si en mode lecture seule, désélectionne toute catégorie active.
-          if (isViewOnly) {
-            document
-              .querySelectorAll(".category-btn.active")
-              .forEach((b) => b.classList.remove("active"));
-          } else if (hasImage) {
-            // Sinon, sélectionne la catégorie actuelle si une image est chargée.
-            selectCategory(currentCategory);
+          // Glisser-déposer
+          const canvasArea = this.dom.canvasArea;
+          ["dragenter", "dragover", "dragleave", "drop"].forEach((evt) => {
+            canvasArea.addEventListener(
+              evt,
+              (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              },
+              false
+            );
+          });
+          canvasArea.addEventListener("drop", (e) => {
+            const file = e.dataTransfer.files[0];
+            this.checkUnsavedChanges(() => this.loadImage(file));
+          });
+
+          // Raccourcis clavier
+          window.addEventListener("keydown", (e) => {
+            if (document.querySelector(".modal-overlay.active")) return;
+            if (e.ctrlKey && e.key === "z") this.undo();
+            if (e.ctrlKey && e.key === "y") this.redo();
+          });
+
+          // Redimensionnement de la fenêtre
+          window.addEventListener(
+            "resize",
+            this.debounce(() => this.initializeCanvas(), 200)
+          );
+        }
+
+        // --- GESTION DU THÈME ---
+
+        /**
+         * Charge le thème (clair/sombre) depuis le localStorage au démarrage.
+         */
+        loadTheme() {
+          const theme = localStorage.getItem("theme") || "dark";
+          if (theme === "light") {
+            this.dom.body.classList.add("light-mode");
           }
-        };
+          this.updateThemeIcon();
+        }
 
-        const resetStateForNewImage = () => {
-          annotations.length = 0;
-          undoneAnnotations.length = 0;
-          maskPoints = [];
-          isDrawing = false;
-          isSaved = true;
-          isViewOnly = false; // Réinitialise le mode lecture seule.
-        };
+        /**
+         * Bascule entre le thème clair et sombre.
+         */
+        toggleTheme() {
+          this.dom.body.classList.toggle("light-mode");
+          const theme = this.dom.body.classList.contains("light-mode")
+            ? "light"
+            : "dark";
+          localStorage.setItem("theme", theme);
+          this.updateThemeIcon();
+          this.redrawCanvas(); // Redessiner pour mettre à jour les couleurs des labels
+        }
 
-        const loadImage = (file) => {
+        /**
+         * Met à jour l'icône et le titre du bouton de thème.
+         */
+        updateThemeIcon() {
+          const isLight = this.dom.body.classList.contains("light-mode");
+          const icon = this.dom.themeToggleBtn.querySelector("i");
+          icon.className = isLight ? "fas fa-moon" : "fas fa-sun";
+          this.dom.themeToggleBtn.title = isLight
+            ? "Passer en mode sombre"
+            : "Passer en mode clair";
+        }
+
+        // --- LOGIQUE DE L'APPLICATION ---
+
+        /**
+         * Charge et redimensionne une image fournie par l'utilisateur.
+         * @param {File} file - Le fichier image à charger.
+         */
+        loadImage(file) {
           if (!file || !file.type.startsWith("image/")) return;
-          setProgress(true);
+          this.setProgress(true);
           const reader = new FileReader();
           reader.onload = (e) => {
             const imgElement = new Image();
             imgElement.onload = () => {
-              // Création d'un canvas temporaire pour redimensionner l'image
               const tempCanvas = document.createElement("canvas");
               const tempCtx = tempCanvas.getContext("2d");
-              const targetWidth = 854;
-              const targetHeight = 480;
-
-              tempCanvas.width = targetWidth;
-              tempCanvas.height = targetHeight;
-
-              // Dessine l'image originale sur le canvas temporaire avec les nouvelles dimensions
-              tempCtx.drawImage(imgElement, 0, 0, targetWidth, targetHeight);
-
-              // Récupère la Data URL de l'image redimensionnée
+              tempCanvas.width = this.config.IMAGE_WIDTH;
+              tempCanvas.height = this.config.IMAGE_HEIGHT;
+              tempCtx.drawImage(
+                imgElement,
+                0,
+                0,
+                tempCanvas.width,
+                tempCanvas.height
+              );
               const resizedDataURL = tempCanvas.toDataURL(file.type);
 
               const resizedImgElement = new Image();
               resizedImgElement.onload = () => {
-                resetStateForNewImage();
-                image = {
+                this.resetState();
+                this.state.image = {
                   file_name: file.name,
                   dataURL: resizedDataURL,
                   image: resizedImgElement,
                   id: Date.now(),
-                  height: targetHeight,
-                  width: targetWidth,
+                  height: resizedImgElement.height,
+                  width: resizedImgElement.width,
                   annotationIndex: 0,
                 };
-                initializeCanvas();
-                updateUIState();
-                setProgress(false);
+                this.initializeCanvas();
+                this.updateUIState();
+                this.setProgress(false);
               };
               resizedImgElement.src = resizedDataURL;
             };
             imgElement.src = e.target.result;
           };
           reader.readAsDataURL(file);
-        };
+        }
 
-        const loadImageFromHistory = (historyEntry) => {
-          setProgress(true);
+        /**
+         * Charge une image et ses annotations depuis l'historique local.
+         * @param {object} historyEntry - L'objet d'historique à charger.
+         */
+        loadImageFromHistory(historyEntry) {
+          this.setProgress(true);
           const imgElement = new Image();
           imgElement.onload = () => {
-            resetStateForNewImage();
-            isViewOnly = true; // Définit le mode lecture seule.
-            image = {
+            this.resetState();
+            this.state.isViewOnly = true;
+            this.state.image = {
               file_name: historyEntry.fileName,
               dataURL: historyEntry.imageData,
               image: imgElement,
@@ -1153,77 +1159,304 @@
               height: imgElement.height,
               width: imgElement.width,
             };
-            // Charge une copie profonde des annotations pour ne pas modifier l'historique d'origine.
-            annotations.push(
-              ...JSON.parse(JSON.stringify(historyEntry.annotations))
+
+            // Charger les annotations et mettre à jour l'historique
+            const loadedAnnotations = JSON.parse(
+              JSON.stringify(historyEntry.annotations)
             );
-            // Calcule le prochain index d'annotation pour éviter les conflits si l'on sort du mode lecture seule.
-            image.annotationIndex =
-              annotations.reduce(
+            this.state.annotations = loadedAnnotations;
+            this.state.history = [[...loadedAnnotations]]; // Initialise l'historique avec cet état
+            this.state.historyIndex = 0;
+
+            this.state.image.annotationIndex =
+              loadedAnnotations.reduce(
                 (max, anno) => Math.max(max, anno.id % 1000),
                 0
               ) + 1;
 
-            initializeCanvas();
-            updateUIState();
-            setProgress(false);
+            this.initializeCanvas();
+            this.updateUIState();
+            this.setProgress(false);
           };
           imgElement.src = historyEntry.imageData;
-        };
+        }
 
-        const initializeCanvas = () => {
-          if (!image) return;
-          els.canvas.width = canvasArea.clientWidth;
-          els.canvas.height = canvasArea.clientHeight;
-          redrawCanvas();
-        };
+        /**
+         * Sélectionne une catégorie d'annotation.
+         * @param {string|number} id - L'ID de la catégorie à sélectionner.
+         */
+        selectCategory(id) {
+          if (this.state.isViewOnly) return;
+          this.state.currentCategory = parseInt(id, 10);
+          document.querySelectorAll(".category-btn").forEach((btn) => {
+            btn.classList.toggle(
+              "active",
+              parseInt(btn.dataset.category, 10) === this.state.currentCategory
+            );
+          });
+        }
 
-        const redrawCanvas = () => {
-          if (!image) return;
-          ctx.clearRect(0, 0, els.canvas.width, els.canvas.height);
-          const imgRatio = image.width / image.height;
-          const canvasRatio = els.canvas.width / els.canvas.height;
-          let dw, dh, dx, dy;
-          if (imgRatio > canvasRatio) {
-            dw = els.canvas.width;
-            dh = dw / imgRatio;
-            dx = 0;
-            dy = (els.canvas.height - dh) / 2;
-          } else {
-            dh = els.canvas.height;
-            dw = dh * imgRatio;
-            dy = 0;
-            dx = (els.canvas.width - dw) / 2;
+        // --- GESTION DE L'HISTORIQUE (UNDO/REDO) ---
+
+        /**
+         * Enregistre l'état actuel des annotations dans l'historique.
+         * Cela permet les fonctionnalités d'annulation et de rétablissement.
+         */
+        recordState() {
+          this.state.isSaved = false;
+          // Crée une copie profonde des annotations actuelles
+          const currentState = JSON.parse(
+            JSON.stringify(this.state.annotations)
+          );
+
+          // Si on a fait des "undo", on supprime les états futurs avant d'ajouter le nouvel état
+          this.state.history = this.state.history.slice(
+            0,
+            this.state.historyIndex + 1
+          );
+
+          this.state.history.push(currentState);
+          this.state.historyIndex++;
+
+          this.updateUIState(); // Met à jour l'état des boutons undo/redo
+        }
+
+        /**
+         * Annule la dernière action en revenant à l'état précédent dans l'historique.
+         */
+        undo() {
+          if (this.state.isViewOnly) return;
+          if (this.state.historyIndex > 0) {
+            this.state.historyIndex--;
+            this.state.annotations = JSON.parse(
+              JSON.stringify(this.state.history[this.state.historyIndex])
+            );
+            this.redrawCanvas();
+            this.updateUIState();
           }
-          currentImageRenderInfo = { x: dx, y: dy, width: dw, height: dh };
-          ctx.drawImage(image.image, dx, dy, dw, dh);
+        }
+
+        /**
+         * Rétablit l'action précédemment annulée.
+         */
+        redo() {
+          if (this.state.isViewOnly) return;
+          if (this.state.historyIndex < this.state.history.length - 1) {
+            this.state.historyIndex++;
+            this.state.annotations = JSON.parse(
+              JSON.stringify(this.state.history[this.state.historyIndex])
+            );
+            this.redrawCanvas();
+            this.updateUIState();
+          }
+        }
+
+        /**
+         * Efface toutes les annotations du canvas après confirmation.
+         */
+        clearAll() {
+          if (this.state.isViewOnly || this.state.annotations.length === 0)
+            return;
+
+          this.showConfirmModal(
+            "Tout effacer",
+            "Voulez-vous vraiment supprimer toutes les annotations ?",
+            () => {
+              if (this.state.annotations.length > 0) {
+                this.state.annotations = [];
+                this.recordState(); // Enregistre l'état vide dans l'historique
+                this.redrawCanvas();
+              }
+            }
+          );
+        }
+
+        // --- DESSIN SUR LE CANVAS ---
+
+        /**
+         * Gère le début du dessin (clic ou toucher).
+         * @param {Event} e - L'événement de la souris ou du toucher.
+         */
+        handleDrawStart(e) {
+          if (this.state.isViewOnly || !this.state.image) return;
+          e.preventDefault();
+          const pos = this.getTransformedPos(
+            e.clientX ?? e.touches[0].clientX,
+            e.clientY ?? e.touches[0].clientY
+          );
+          if (!pos) return;
+          this.state.isDrawing = true;
+          this.state.maskPoints = [pos];
+        }
+
+        /**
+         * Gère le mouvement pendant le dessin.
+         * @param {Event} e - L'événement de la souris ou du toucher.
+         */
+        handleDrawMove(e) {
+          if (!this.state.isDrawing) return;
+          e.preventDefault();
+          const pos = this.getTransformedPos(
+            e.clientX ?? e.touches[0].clientX,
+            e.clientY ?? e.touches[0].clientY
+          );
+          if (!pos) return;
+          this.state.maskPoints.push(pos);
+          this.redrawCanvas();
+        }
+
+        /**
+         * Gère la fin du dessin (relâchement du clic ou du toucher).
+         */
+        handleDrawEnd() {
+          if (!this.state.isDrawing) return;
+          this.state.isDrawing = false;
+          this.finalizeMask();
+        }
+
+        /**
+         * Finalise le masque dessiné, le transforme en annotation et l'ajoute à la liste.
+         */
+        finalizeMask() {
+          if (this.state.maskPoints.length < 3) {
+            this.state.maskPoints = [];
+            this.redrawCanvas();
+            return;
+          }
+          const { image, currentImageRenderInfo, currentCategory } = this.state;
+          const scaleX = image.width / currentImageRenderInfo.width;
+          const scaleY = image.height / currentImageRenderInfo.height;
+
+          const segmentation = [[]];
+          let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
+
+          this.state.maskPoints.forEach((p) => {
+            const originalX = Math.round(p.x * scaleX);
+            const originalY = Math.round(p.y * scaleY);
+            segmentation[0].push(originalX, originalY);
+            minX = Math.min(minX, originalX);
+            minY = Math.min(minY, originalY);
+            maxX = Math.max(maxX, originalX);
+            maxY = Math.max(maxY, originalY);
+          });
+
+          this.state.annotations.push({
+            id: image.id * 1000 + image.annotationIndex++,
+            image_id: image.id,
+            category_id: currentCategory,
+            bbox: [minX, minY, maxX - minX, maxY - minY],
+            area: 0, // Le calcul de l'aire peut être ajouté ici si nécessaire
+            segmentation: segmentation,
+            iscrowd: 0,
+          });
+
+          this.state.maskPoints = [];
+          this.recordState(); // Enregistre le nouvel état avec l'annotation ajoutée
+          this.redrawCanvas();
+        }
+
+        /**
+         * Redessine l'intégralité du canvas : image de fond, annotations et masque en cours.
+         */
+        redrawCanvas() {
+          if (!this.state.image) return;
+          const { canvas } = this.dom;
+          const { image } = this.state;
+
+          this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Calculer les dimensions de l'image pour qu'elle remplisse le canvas (comportement 'cover')
+          const imgRatio = image.width / image.height;
+          const canvasRatio = canvas.width / canvas.height;
+          let dw, dh, dx, dy;
+
+          if (imgRatio > canvasRatio) {
+            // L'image est plus large que le canvas (relativement)
+            // On fait correspondre la hauteur de l'image à la hauteur du canvas
+            dh = canvas.height;
+            dw = dh * imgRatio;
+            // On centre l'image horizontalement, en rognant les côtés
+            dx = (canvas.width - dw) / 2;
+            dy = 0;
+          } else {
+            // L'image est plus haute que le canvas (relativement)
+            // On fait correspondre la largeur de l'image à la largeur du canvas
+            dw = canvas.width;
+            dh = dw / imgRatio;
+            // On centre l'image verticalement, en rognant le haut/bas
+            dx = 0;
+            dy = (canvas.height - dh) / 2;
+          }
+
+          this.state.currentImageRenderInfo = {
+            x: dx,
+            y: dy,
+            width: dw,
+            height: dh,
+          };
+          this.ctx.drawImage(image.image, dx, dy, dw, dh);
 
           const labelRects = [];
-          if (showAnnotations) {
-            annotations.forEach((anno) => drawAnnotation(anno, labelRects));
+          if (this.state.showAnnotations) {
+            this.state.annotations.forEach((anno) =>
+              this.drawAnnotation(anno, labelRects)
+            );
           }
-          if (isDrawing && maskPoints.length > 0) {
-            drawCurrentMask();
+          if (this.state.isDrawing && this.state.maskPoints.length > 0) {
+            this.drawCurrentMask();
           }
-        };
+        }
 
-        const drawPolygon = (points) => {
+        // --- FONCTIONS DE DESSIN SPÉCIFIQUES ---
+
+        drawAnnotation(anno, labelRects) {
+          const category = this.config.CATEGORIES[anno.category_id];
+          if (!category) return;
+
+          const { currentImageRenderInfo, image } = this.state;
+          const scaleX = currentImageRenderInfo.width / image.width;
+          const scaleY = currentImageRenderInfo.height / image.height;
+          const scaledMask = anno.segmentation[0].map((val, i) =>
+            i % 2 === 0
+              ? val * scaleX + currentImageRenderInfo.x
+              : val * scaleY + currentImageRenderInfo.y
+          );
+
+          this.ctx.fillStyle = category.color
+            .replace("rgb", "rgba")
+            .replace(")", ", 0.3)");
+          this.ctx.strokeStyle = category.color;
+          this.ctx.lineWidth = 2;
+
+          this.drawPolygon(scaledMask);
+          this.drawLabel(
+            category.displayName,
+            scaledMask,
+            category,
+            labelRects
+          );
+        }
+
+        drawPolygon(points) {
           if (points.length < 2) return;
-          ctx.beginPath();
-          ctx.moveTo(points[0], points[1]);
+          this.ctx.beginPath();
+          this.ctx.moveTo(points[0], points[1]);
           for (let i = 2; i < points.length; i += 2) {
-            ctx.lineTo(points[i], points[i + 1]);
+            this.ctx.lineTo(points[i], points[i + 1]);
           }
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        };
+          this.ctx.closePath();
+          this.ctx.fill();
+          this.ctx.stroke();
+        }
 
-        const drawLabel = (text, scaledMaskPoints, category, labelRects) => {
+        drawLabel(text, scaledMaskPoints, category, labelRects) {
           const fontSize = 12;
-          ctx.font = `bold ${fontSize}px Inter`;
+          this.ctx.font = `bold ${fontSize}px Inter`;
           const padding = 4;
-          const textMetrics = ctx.measureText(text);
+          const textMetrics = this.ctx.measureText(text);
           const rectWidth = textMetrics.width + padding * 2;
           const rectHeight = fontSize + padding * 2;
 
@@ -1239,26 +1472,28 @@
           let labelX = (minX + maxX) / 2 - rectWidth / 2;
           let labelY = minY - rectHeight - 5;
 
-          // Assure que le label reste dans les limites du canvas.
+          // Assurer que le label reste dans les limites du canvas
           labelX = Math.max(
             padding,
-            Math.min(labelX, els.canvas.width - rectWidth - padding)
+            Math.min(labelX, this.dom.canvas.width - rectWidth - padding)
           );
           labelY = Math.max(
             padding,
-            Math.min(labelY, els.canvas.height - rectHeight - padding)
+            Math.min(labelY, this.dom.canvas.height - rectHeight - padding)
           );
 
-          // Évite le chevauchement basique des labels.
-          let isOverlapping = labelRects.some(
-            (r) =>
-              labelX < r.x + r.width &&
-              labelX + rectWidth > r.x &&
-              labelY < r.y + r.height &&
-              labelY + rectHeight > r.y
-          );
-          if (isOverlapping) labelY = Math.max(minY, labelY) + rectHeight + 5;
-
+          // Éviter le chevauchement basique
+          if (
+            labelRects.some(
+              (r) =>
+                labelX < r.x + r.width &&
+                labelX + rectWidth > r.x &&
+                labelY < r.y + r.height &&
+                labelY + rectHeight > r.y
+            )
+          ) {
+            labelY = Math.max(minY, labelY) + rectHeight + 5;
+          }
           labelRects.push({
             x: labelX,
             y: labelY,
@@ -1266,332 +1501,311 @@
             height: rectHeight,
           });
 
-          ctx.fillStyle = "rgba(15, 15, 20, 0.7)";
-          ctx.fillRect(labelX, labelY, rectWidth, rectHeight);
-          ctx.fillStyle = category.color;
-          ctx.textBaseline = "top";
-          ctx.fillText(text, labelX + padding, labelY + padding);
-        };
+          this.ctx.fillStyle = getComputedStyle(
+            document.documentElement
+          ).getPropertyValue("--label-bg");
+          this.ctx.fillRect(labelX, labelY, rectWidth, rectHeight);
+          this.ctx.fillStyle = category.color;
+          this.ctx.textBaseline = "top";
+          this.ctx.fillText(text, labelX + padding, labelY + padding);
+        }
 
-        const drawAnnotation = (anno, labelRects) => {
-          const category = CATEGORIES[anno.category_id];
-          if (!category) return;
-
-          const scaleX = currentImageRenderInfo.width / image.width;
-          const scaleY = currentImageRenderInfo.height / image.height;
-          const scaledMask = anno.segmentation[0].map((val, i) =>
-            i % 2 === 0
-              ? val * scaleX + currentImageRenderInfo.x
-              : val * scaleY + currentImageRenderInfo.y
-          );
-
-          ctx.fillStyle = category.color
-            .replace("rgb", "rgba")
-            .replace(")", ", 0.3)");
-          ctx.strokeStyle = category.color;
-          ctx.lineWidth = 2;
-
-          drawPolygon(scaledMask);
-          drawLabel(category.displayName, scaledMask, category, labelRects);
-        };
-
-        const drawCurrentMask = () => {
-          ctx.strokeStyle = CATEGORIES[currentCategory].color;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          maskPoints.forEach((p, i) => {
-            const drawX = p.x + currentImageRenderInfo.x;
-            const drawY = p.y + currentImageRenderInfo.y;
-            i === 0 ? ctx.moveTo(drawX, drawY) : ctx.lineTo(drawX, drawY);
+        drawCurrentMask() {
+          this.ctx.strokeStyle =
+            this.config.CATEGORIES[this.state.currentCategory].color;
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.state.maskPoints.forEach((p, i) => {
+            const drawX = p.x + this.state.currentImageRenderInfo.x;
+            const drawY = p.y + this.state.currentImageRenderInfo.y;
+            i === 0
+              ? this.ctx.moveTo(drawX, drawY)
+              : this.ctx.lineTo(drawX, drawY);
           });
-          ctx.stroke();
-        };
+          this.ctx.stroke();
+        }
 
-        const finalizeMask = () => {
-          if (maskPoints.length < 3) {
-            maskPoints = [];
-            isDrawing = false;
-            redrawCanvas();
+        // --- GESTION DE L'UI ---
+
+        /**
+         * Met à jour l'état de l'interface utilisateur (activation/désactivation des boutons, etc.).
+         */
+        updateUIState() {
+          const { image, isViewOnly, history, historyIndex, annotations } =
+            this.state;
+          const hasImage = !!image;
+          const canAnnotate = hasImage && !isViewOnly;
+
+          this.dom.canvas.style.display = hasImage ? "block" : "none";
+          this.dom.placeholder.style.display = hasImage ? "none" : "flex";
+
+          // Activer/désactiver les boutons en fonction de l'état
+          this.dom.saveBtn.disabled = !hasImage || annotations.length === 0;
+          this.dom.clearAllBtn.disabled =
+            !canAnnotate || annotations.length === 0;
+          this.dom.undoBtn.disabled = !canAnnotate || historyIndex <= 0;
+          this.dom.redoBtn.disabled =
+            !canAnnotate || historyIndex >= history.length - 1;
+
+          document
+            .querySelectorAll(".category-btn")
+            .forEach((btn) => (btn.disabled = !canAnnotate));
+          this.dom.readOnlyBadge.classList.toggle("active", isViewOnly);
+
+          if (isViewOnly) {
+            document
+              .querySelectorAll(".category-btn.active")
+              .forEach((b) => b.classList.remove("active"));
+          } else if (hasImage) {
+            this.selectCategory(this.state.currentCategory);
+          }
+        }
+
+        /**
+         * Initialise ou redimensionne le canvas pour qu'il s'adapte à son conteneur.
+         */
+        initializeCanvas() {
+          if (!this.state.image) return;
+          this.dom.canvas.width = this.dom.canvasArea.clientWidth;
+          this.dom.canvas.height = this.dom.canvasArea.clientHeight;
+          this.redrawCanvas();
+        }
+
+        /**
+         * Affiche ou masque les annotations sur le canvas.
+         */
+        toggleAnnotationsVisibility() {
+          this.state.showAnnotations = !this.state.showAnnotations;
+          this.dom.toggleAnnotationsBtn.querySelector(
+            "i"
+          ).className = `fas fa-eye${
+            this.state.showAnnotations ? "" : "-slash"
+          }`;
+          this.redrawCanvas();
+        }
+
+        // --- SAUVEGARDE ET HISTORIQUE LOCAL ---
+
+        /**
+         * Sauvegarde les annotations actuelles dans un fichier JSON et met à jour l'historique local.
+         */
+        saveAll() {
+          if (!this.state.image || this.state.annotations.length === 0) {
+            this.showNoAnnotationMessage();
             return;
           }
-          const scaleX = image.width / currentImageRenderInfo.width;
-          const scaleY = image.height / currentImageRenderInfo.height;
+          this.setProgress(true);
 
-          const segmentation = [[]];
-          let minX = Infinity,
-            minY = Infinity,
-            maxX = -Infinity,
-            maxY = -Infinity;
-
-          maskPoints.forEach((p) => {
-            const originalX = Math.round(p.x * scaleX);
-            const originalY = Math.round(p.y * scaleY);
-            segmentation[0].push(originalX, originalY);
-            minX = Math.min(minX, originalX);
-            minY = Math.min(minY, originalY);
-            maxX = Math.max(maxX, originalX);
-            maxY = Math.max(maxY, originalY);
-          });
-
-          annotations.push({
-            id: image.id * 1000 + image.annotationIndex++,
-            image_id: image.id,
-            category_id: currentCategory,
-            bbox: [minX, minY, maxX - minX, maxY - minY],
-            area: 0,
-            segmentation: segmentation,
-            iscrowd: 0,
-          });
-
-          maskPoints = [];
-          isDrawing = false;
-          undoneAnnotations = [];
-          isSaved = false;
-          redrawCanvas();
-        };
-
-        const selectCategory = (id) => {
-          if (isViewOnly) return; // Empêche la sélection de catégorie en mode lecture seule.
-          currentCategory = parseInt(id);
-          document.querySelectorAll(".category-btn").forEach((btn) => {
-            btn.classList.toggle(
-              "active",
-              parseInt(btn.dataset.category) === currentCategory
-            );
-          });
-        };
-
-        // --- ACTIONS & SAUVEGARDE ---
-        const undo = () => {
-          if (isViewOnly) return; // Empêche l'annulation en mode lecture seule.
-          if (maskPoints.length > 0) {
-            maskPoints = [];
-            isDrawing = false;
-          } else if (annotations.length > 0) {
-            undoneAnnotations.push(annotations.pop());
-          }
-          isSaved = false;
-          redrawCanvas();
-        };
-        const redo = () => {
-          if (isViewOnly || undoneAnnotations.length === 0) return; // Empêche la répétition en mode lecture seule.
-          annotations.push(undoneAnnotations.pop());
-          isSaved = false;
-          redrawCanvas();
-        };
-        const clearAll = () => {
-          if (
-            isViewOnly ||
-            (annotations.length === 0 && maskPoints.length === 0)
-          )
-            return; // Empêche d'effacer en mode lecture seule ou s'il n'y a rien à effacer.
-          showConfirmModal(
-            "Tout effacer",
-            "Voulez-vous vraiment supprimer toutes les annotations ?",
-            () => {
-              annotations.length = 0;
-              maskPoints = [];
-              isDrawing = false;
-              isSaved = false;
-              redrawCanvas();
-            }
-          );
-        };
-
-        const saveAll = () => {
-          if (!image) return;
-          if (annotations.length === 0) {
-            showNoAnnotationMessage(); // Affiche le message "Pas d'annotations".
-            return;
-          }
-
-          setProgress(true);
           const jsonData = {
             images: [
               {
-                file_name: image.file_name,
-                height: image.height,
-                width: image.width,
-                id: image.id,
+                file_name: this.state.image.file_name,
+                height: this.state.image.height,
+                width: this.state.image.width,
+                id: this.state.image.id,
               },
             ],
-            annotations: annotations,
-            categories: Object.values(CATEGORIES),
+            annotations: this.state.annotations,
+            categories: Object.values(this.config.CATEGORIES),
           };
           const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], {
             type: "application/json",
           });
-          const url = URL.createObjectURL(jsonBlob);
           const a = document.createElement("a");
-          a.href = url;
-          a.download = `${image.file_name.split(".")[0]}_annotations.json`;
+          a.href = URL.createObjectURL(jsonBlob);
+          a.download = `${
+            this.state.image.file_name.split(".")[0]
+          }_annotations.json`;
+          document.body.appendChild(a);
           a.click();
-          URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          URL.revokeObjectURL(a.href);
 
-          // Utilise l'image originale pour l'historique (pas de réduction de qualité).
+          // Mise à jour de l'historique local
           const historyEntry = {
-            fileName: image.file_name,
-            imageData: image.dataURL,
-            annotations: JSON.parse(JSON.stringify(annotations)), // Copie profonde des annotations.
-            imageId: image.id,
+            fileName: this.state.image.file_name,
+            imageData: this.state.image.dataURL,
+            annotations: this.state.annotations,
+            imageId: this.state.image.id,
             timestamp: new Date().toISOString(),
           };
-          // Supprime l'ancienne entrée si le même fichier est resauvegardé pour éviter les doublons.
-          let history = getHistory().filter(
+          let history = this.getHistory().filter(
             (item) => item.fileName !== historyEntry.fileName
           );
           history.push(historyEntry);
-          saveHistory(history);
+          this.saveHistory(history);
 
-          isSaved = true;
-          setProgress(false);
+          this.state.isSaved = true;
+          this.setProgress(false);
+        }
+
+        getHistory = () =>
+          JSON.parse(localStorage.getItem("annotatedImageHistory")) || [];
+        saveHistory = (history) => {
+          if (history.length > 10) history = history.slice(-10);
+          localStorage.setItem(
+            "annotatedImageHistory",
+            JSON.stringify(history)
+          );
         };
 
-        const checkUnsavedChanges = (callback) => {
-          // Vérifie si une image est chargée, s'il y a des annotations et si elles ne sont pas sauvegardées.
-          if (image && annotations.length > 0 && !isSaved) {
-            toggleModal("imageChangeModal", true);
-            els.saveAndChangeBtn.onclick = () => {
-              saveAll();
-              callback(); // Exécute le callback immédiatement après saveAll.
-              toggleModal("imageChangeModal", false);
+        // --- MODALES ET UTILITAIRES ---
+
+        toggleModal = (modalId, show) =>
+          document.getElementById(modalId).classList.toggle("active", show);
+        setProgress = (active) =>
+          this.dom.progressOverlay.classList.toggle("active", active);
+        debounce = (func, wait) => {
+          let timeout;
+          return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+          };
+        };
+
+        showConfirmModal(title, message, confirmCallback) {
+          this.dom.confirmModalLabel.textContent = title;
+          this.dom.confirmMessage.textContent = message;
+
+          // Remplacer le bouton pour éviter les écouteurs multiples
+          const newConfirmBtn = this.dom.confirmActionBtn.cloneNode(true);
+          this.dom.confirmActionBtn.parentNode.replaceChild(
+            newConfirmBtn,
+            this.dom.confirmActionBtn
+          );
+          this.dom.confirmActionBtn = newConfirmBtn;
+
+          this.dom.confirmActionBtn.onclick = () => {
+            confirmCallback();
+            this.toggleModal("confirmModal", false);
+          };
+          this.toggleModal("confirmModal", true);
+        }
+
+        showHistoryModal() {
+          this.dom.historyList.innerHTML = "";
+          const history = this.getHistory();
+          this.dom.clearHistoryBtn.style.display =
+            history.length > 0 ? "block" : "none";
+
+          if (history.length === 0) {
+            this.dom.historyList.innerHTML =
+              "<li>Aucune image dans l'historique.</li>";
+          } else {
+            history.reverse().forEach((entry) => {
+              const li = document.createElement("li");
+              li.className = "history-item";
+              li.innerHTML = `
+                        <img src="${
+                          entry.imageData
+                        }" class="history-item-thumbnail" alt="Aperçu"/>
+                        <div class="history-item-info">
+                            <span class="filename">${entry.fileName}</span>
+                            <span class="details">${
+                              entry.annotations.length
+                            } annotation(s) - ${new Date(
+                entry.timestamp
+              ).toLocaleString()}</span>
+                        </div>
+                        <i class="fas fa-trash history-item-delete" title="Supprimer cette entrée"></i>`;
+
+              li.querySelector(".history-item-delete").onclick = (e) => {
+                e.stopPropagation();
+                this.deleteHistoryEntry(entry.timestamp);
+              };
+              li.addEventListener("click", () =>
+                this.checkUnsavedChanges(() => {
+                  this.loadImageFromHistory(entry);
+                  this.toggleModal("historyModal", false);
+                })
+              );
+              this.dom.historyList.appendChild(li);
+            });
+          }
+          this.toggleModal("historyModal", true);
+        }
+
+        deleteHistoryEntry(timestamp) {
+          this.showConfirmModal(
+            "Supprimer l'entrée",
+            "Voulez-vous vraiment supprimer cette entrée ?",
+            () => {
+              let history = this.getHistory().filter(
+                (item) => item.timestamp !== timestamp
+              );
+              this.saveHistory(history);
+              this.showHistoryModal();
+            }
+          );
+        }
+
+        clearAllHistory() {
+          this.showConfirmModal(
+            "Vider l'historique",
+            "Voulez-vous vraiment vider tout l'historique ?",
+            () => {
+              localStorage.removeItem("annotatedImageHistory");
+              this.showHistoryModal();
+            }
+          );
+        }
+
+        checkUnsavedChanges(callback) {
+          if (this.state.image && !this.state.isSaved) {
+            this.toggleModal("imageChangeModal", true);
+            this.dom.saveAndChangeBtn.onclick = () => {
+              this.saveAll();
+              setTimeout(() => {
+                callback();
+                this.toggleModal("imageChangeModal", false);
+              }, 100);
             };
-            els.changeWithoutSavingBtn.onclick = () => {
-              isSaved = true; // Marque comme sauvegardé pour éviter la boucle de confirmation.
+            this.dom.changeWithoutSavingBtn.onclick = () => {
+              this.state.isSaved = true;
               callback();
-              toggleModal("imageChangeModal", false);
+              this.toggleModal("imageChangeModal", false);
             };
           } else {
             callback();
           }
+        }
+
+        showNoAnnotationMessage = (duration = 3000) => {
+          this.dom.noAnnotationMessage.classList.add("active");
+          setTimeout(
+            () => this.dom.noAnnotationMessage.classList.remove("active"),
+            duration
+          );
         };
 
-        // --- GESTION DES ÉVÉNEMENTS ---
-        const getTransformedPos = (clientX, clientY) => {
-          const rect = els.canvas.getBoundingClientRect();
+        getTransformedPos(clientX, clientY) {
+          const rect = this.dom.canvas.getBoundingClientRect();
+          const { currentImageRenderInfo, canvas } = this.state;
+          // Calcul original basé sur l'image affichée (currentImageRenderInfo)
           const x =
-            (clientX - rect.left) * (els.canvas.width / rect.width) -
-            currentImageRenderInfo.x;
+            (clientX - rect.left) * (this.dom.canvas.width / rect.width) -
+            this.state.currentImageRenderInfo.x;
           const y =
-            (clientY - rect.top) * (els.canvas.height / rect.height) -
-            currentImageRenderInfo.y;
-          // Retourne null si le clic est en dehors de l'image rendue sur le canvas.
+            (clientY - rect.top) * (this.dom.canvas.height / rect.height) -
+            this.state.currentImageRenderInfo.y;
+
+          // Vérifier si le clic est à l'intérieur des limites de l'image affichée
           if (
             x < 0 ||
             y < 0 ||
-            x > currentImageRenderInfo.width ||
-            y > currentImageRenderInfo.height
+            x > this.state.currentImageRenderInfo.width ||
+            y > this.state.currentImageRenderInfo.height
           ) {
             return null;
           }
           return { x, y };
-        };
+        }
+      }
 
-        const handleDrawStart = (e) => {
-          if (isViewOnly || !image) return; // Empêche le dessin en mode lecture seule ou sans image.
-          e.preventDefault();
-          const pos = getTransformedPos(
-            e.clientX ?? e.touches[0].clientX,
-            e.clientY ?? e.touches[0].clientY
-          );
-          if (!pos) return;
-          isDrawing = true;
-          maskPoints = [pos];
-        };
-
-        const handleDrawMove = (e) => {
-          if (!isDrawing) return;
-          e.preventDefault();
-          const pos = getTransformedPos(
-            e.clientX ?? e.touches[0].clientX,
-            e.clientY ?? e.touches[0].clientY
-          );
-          if (!pos) return;
-          maskPoints.push(pos);
-          redrawCanvas();
-        };
-
-        const handleDrawEnd = () => {
-          if (!isDrawing) return;
-          isDrawing = false;
-          finalizeMask();
-        };
-
-        // --- INITIALISATION ---
-        const init = () => {
-          setupModals();
-          updateUIState(); // Mise à jour initiale de l'interface utilisateur.
-
-          els.newImageBtn.onclick = () =>
-            checkUnsavedChanges(() => els.imageInput.click());
-          els.imageInput.onchange = (e) =>
-            e.target.files[0] && loadImage(e.target.files[0]);
-          els.saveBtn.onclick = debounce(saveAll, 300);
-          els.historyBtn.onclick = showHistoryModal;
-          els.clearHistoryBtn.onclick = clearAllHistory;
-
-          els.toggleAnnotationsBtn.onclick = () => {
-            showAnnotations = !showAnnotations;
-            els.toggleAnnotationsBtn.querySelector(
-              "i"
-            ).className = `fas fa-eye${showAnnotations ? "" : "-slash"}`;
-            redrawCanvas();
-          };
-          els.tutorialBtn.onclick = () => toggleModal("tutorialModal", true);
-          els.undoBtn.onclick = undo;
-          els.redoBtn.onclick = redo;
-          els.clearAllBtn.onclick = clearAll;
-
-          // Attache les écouteurs d'événements aux boutons de catégorie.
-          document.querySelectorAll(".category-btn").forEach((button) => {
-            button.onclick = () => selectCategory(button.dataset.category);
-          });
-
-          // Écouteurs d'événements pour le dessin sur le canvas (souris et tactile).
-          els.canvas.addEventListener("mousedown", handleDrawStart);
-          els.canvas.addEventListener("mousemove", handleDrawMove);
-          els.canvas.addEventListener("mouseup", handleDrawEnd);
-          els.canvas.addEventListener("mouseleave", handleDrawEnd);
-          els.canvas.addEventListener("touchstart", handleDrawStart, {
-            passive: false,
-          });
-          els.canvas.addEventListener("touchmove", handleDrawMove, {
-            passive: false,
-          });
-          els.canvas.addEventListener("touchend", handleDrawEnd, {
-            passive: false,
-          });
-          els.canvas.addEventListener("contextmenu", (e) => e.preventDefault()); // Empêche le menu contextuel du clic droit.
-
-          // Gestion du glisser-déposer d'images.
-          ["dragenter", "dragover", "dragleave", "drop"].forEach((evt) => {
-            canvasArea.addEventListener(
-              evt,
-              (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              },
-              false
-            );
-          });
-          canvasArea.addEventListener("drop", (e) => {
-            const file = e.dataTransfer.files[0];
-            checkUnsavedChanges(() => loadImage(file));
-          });
-
-          // Raccourcis clavier (Annuler/Refaire).
-          window.addEventListener("keydown", (e) => {
-            if (document.querySelector(".modal-overlay.active")) return; // Ignorer les raccourcis si une modale est ouverte.
-            if (e.ctrlKey && e.key === "z") undo();
-            if (e.ctrlKey && e.key === "y") redo();
-          });
-
-          // Redimensionnement du canvas avec la fenêtre, avec debounce pour optimiser.
-          window.addEventListener("resize", debounce(initializeCanvas, 200));
-        };
-
-        // Lancement de l'initialisation de l'application.
-        init();
+      // Point d'entrée de l'application
+      document.addEventListener("DOMContentLoaded", () => {
+        const app = new AnatomyAnnotator();
+        app.init();
       });
     </script>
   </body>
