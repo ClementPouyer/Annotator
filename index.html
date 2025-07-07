@@ -443,8 +443,8 @@
           particles.push({
             x: Math.random() * w,
             y: Math.random() * h,
-            vx: randomRange(-0.1, 0.1),
-            vy: randomRange(-0.1, 0.1),
+            vx: randomRange(-0.12, 0.12),
+            vy: randomRange(-0.12, 0.12),
             r: randomRange(0.8, 1.8),
             opacity: randomRange(0.6, 0.9),
           });
@@ -481,9 +481,9 @@
               ctx.moveTo(p1.x, p1.y);
               ctx.lineTo(p2.x, p2.y);
               ctx.strokeStyle = `rgba(255, 255, 255, ${
-                ((maxDistance - distance) / maxDistance) * 0.4
+                ((maxDistance - distance) / maxDistance) * 0.5
               })`;
-              ctx.lineWidth = 1;
+              ctx.lineWidth = 1.5;
               ctx.stroke();
             }
           }
